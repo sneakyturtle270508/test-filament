@@ -1,32 +1,32 @@
-FROM php:8.3-fpm
+# Bruk PHP 8.3 med FPM
+FROM php:8.3-cli
 
-# System dependencies + PHP extensions
+# Installer system dependencies + PHP extensions
 RUN apt-get update && apt-get install -y \
     unzip git curl libpq-dev libxml2-dev zlib1g-dev libzip-dev libonig-dev pkg-config build-essential autoconf bison libicu-dev \
-    && docker-php-ext-install pdo pdo_pgsql mbstring xml zip intl
+    && docker-php-ext-install pdo pdo_pgsql mbstring xml zip tokenizer intl
 
-# Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
+# Sett working directory
 WORKDIR /var/www
 
-# Safe directory for git
-RUN git config --global --add safe.directory /var/www
+# Kopier prosjektfiler
+COPY . /var/www
 
-# Copy project
-COPY . .
+# Installer Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Permissions
-RUN chown -R www-data:www-data /var/www && chmod -R 755 /var/www
-
-# Install dependencies
+# Kjør Composer install uten dev
 RUN composer install --no-dev --optimize-autoloader
 
-# Storage link
+# Lag storage link
 RUN php artisan storage:link
 
-# Expose port for Render
+# Lag start script
+COPY start.sh /var/www/start.sh
+RUN chmod +x /var/www/start.sh
+
+# Eksponer port for Render
 EXPOSE 10000
 
-# Start Laravel server
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
+# CMD til entrypoint
+CMD ["./start.sh"]
