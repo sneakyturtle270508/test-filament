@@ -1,6 +1,6 @@
 FROM php:8.2-cli
 
-# Installer system dependencies
+# Installer system dependencies inkludert oniguruma
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zlib1g-dev \
     libzip-dev \
+    libonig-dev \
+    pkg-config \
     && docker-php-ext-install pdo pdo_pgsql mbstring xml zip tokenizer
 
 # Installer Composer 2
@@ -22,7 +24,7 @@ COPY . .
 # Gi rettigheter
 RUN chown -R www-data:www-data /var/www && chmod -R 755 /var/www
 
-# Installer dependencies
+# Installer Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
 # Lag storage link for uploads
