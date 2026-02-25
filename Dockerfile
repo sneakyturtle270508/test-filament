@@ -1,33 +1,34 @@
-# Bruk PHP 8.3 CLI med alle dev headers
-FROM php:8.3-cli
+FROM php:8.3-fpm
 
-# Sett working directory
 WORKDIR /var/www
 
-# Installer system dependencies
+# Installer dependencies for Laravel + Filament
 RUN apt-get update && apt-get install -y \
-    unzip git curl libpq-dev libxml2-dev zlib1g-dev libzip-dev libonig-dev pkg-config build-essential autoconf bison libicu-dev libsqlite3-dev \
+    unzip git curl libpq-dev libxml2-dev zlib1g-dev libzip-dev \
+    libonig-dev pkg-config build-essential autoconf bison libicu-dev \
     && docker-php-ext-configure intl \
-    && docker-php-ext-install pdo pdo_pgsql mbstring xml zip tokenizer intl
+    && docker-php-ext-install pdo pdo_pgsql mbstring xml zip intl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Kopier Composer bin fra offisiell image
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Kopier prosjektfiler
-COPY . /var/www
+# Safe git directory
+RUN git config --global --add safe.directory /var/www
 
-# Composer install uten dev
+# Kopier prosjekt
+COPY . .
+
+# Rettigheter
+RUN chown -R www-data:www-data /var/www && chmod -R 755 /var/www
+
+# Composer install
 RUN composer install --no-dev --optimize-autoloader
 
-# Lag storage symlink
+# Storage link
 RUN php artisan storage:link
-
-# Lag start script
-COPY start.sh /var/www/start.sh
-RUN chmod +x /var/www/start.sh
 
 # Eksponer port for Render
 EXPOSE 10000
 
-# CMD til entrypoint
-CMD ["./start.sh"]
+CMD php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan serve --host=0.0.0.0 --port=10000
