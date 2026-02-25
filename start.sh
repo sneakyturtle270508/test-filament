@@ -8,5 +8,5 @@ chmod -R 755 /var/www
 # Kjør migrasjoner automatisk
 php artisan migrate --force
 
-# Start Laravel server på Render-port
+# Start Laravel server
 php artisan serve --host=0.0.0.0 --port=10000
