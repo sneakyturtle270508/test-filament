@@ -25,6 +25,8 @@ RUN composer install --no-dev --optimize-autoloader
 # Storage link
 RUN php artisan storage:link
 
-EXPOSE 9000
+# Expose port for Render
+EXPOSE 10000
 
-CMD ["php-fpm"]
+# Start Laravel server
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
