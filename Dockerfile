@@ -1,6 +1,6 @@
 FROM php:8.2-cli
 
-# Installer system dependencies inkludert oniguruma
+# Installer system dependencies inkludert oniguruma for mbstring
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -21,17 +21,17 @@ WORKDIR /var/www
 # Kopier prosjektfiler
 COPY . .
 
-# Gi rettigheter
+# Rettigheter
 RUN chown -R www-data:www-data /var/www && chmod -R 755 /var/www
 
-# Installer Laravel dependencies
+# Composer dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Lag storage link for uploads
+# Lag storage link
 RUN php artisan storage:link
 
 # Eksponer port
 EXPOSE 10000
 
-# Start server og kjør migreringer
+# Start server og migrering
 CMD php artisan migrate --force && php -S 0.0.0.0:$PORT -t public
